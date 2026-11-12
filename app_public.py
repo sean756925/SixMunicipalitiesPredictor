@@ -214,17 +214,17 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .policy-item a { color:var(--violet2) !important; font-size:12px; font-weight:750; text-decoration:none !important; }
 .policy-person .policy-note { margin-top:8px; }
 @media(max-width:700px){
-  .hero{padding:24px 20px}.block-container{padding-left:1rem;padding-right:1rem;padding-bottom:7rem}.story{min-height:auto}
+  .hero{padding:24px 20px}.block-container{padding-left:1rem;padding-right:1rem;padding-bottom:13rem}.story{min-height:auto}
   .hero .chips { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
     -webkit-overflow-scrolling:touch; }
   .hero .chip { flex:0 0 auto; white-space:nowrap; }
-  .back-to-top { right:14px; bottom:calc(160px + env(safe-area-inset-bottom, 0px)); padding:9px 12px; font-size:12px; }
+  .back-to-top { right:14px; bottom:calc(248px + env(safe-area-inset-bottom, 0px)); padding:9px 12px; font-size:12px; }
   .section-nav { margin:18px 0 24px; gap:6px; }
   .section-nav a { padding:9px 5px; font-size:11px; }
-  .mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:9998; display:flex; align-items:stretch; justify-content:space-around;
-    padding:7px max(6px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
-    background:rgba(255,255,255,.96); border-top:1px solid #ddd6fe; box-shadow:0 -6px 22px rgba(35,18,61,.12);
-    backdrop-filter:blur(14px); }
+  .mobile-nav { position:fixed; left:8px; right:8px; bottom:calc(88px + env(safe-area-inset-bottom, 0px)); z-index:9998;
+    display:flex; align-items:stretch; justify-content:space-around; padding:7px max(6px,env(safe-area-inset-right)) 7px max(6px,env(safe-area-inset-left));
+    background:rgba(255,255,255,.96); border:1px solid #ddd6fe; border-radius:18px;
+    box-shadow:0 8px 28px rgba(35,18,61,.18); backdrop-filter:blur(14px); }
   .mobile-nav a { flex:1 1 0; min-width:0; min-height:49px; color:#4c1d95 !important; text-decoration:none !important;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     text-align:center; font-size:10px; font-weight:800; line-height:1.1; }
