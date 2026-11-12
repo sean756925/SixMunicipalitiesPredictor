@@ -10,15 +10,15 @@ import glob
 import json
 import os
 import re
-import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
-from zoneinfo import ZoneInfo
 
 import altair as alt
 import pandas as pd
 import streamlit as st
 import yaml
+
+from view_counter import record_supabase_view
 
 BASE_DIR = Path(__file__).resolve().parent
 FEAT_CSV = BASE_DIR / "data" / "features" / "voice_features.csv"
@@ -27,7 +27,6 @@ FORECAST_DIR = BASE_DIR / "data" / "forecast"
 PLOT_DIR = BASE_DIR / "data" / "plots"
 KEYWORDS_YAML = BASE_DIR / "config" / "keywords.yaml"
 POLICIES_JSON = BASE_DIR / "data" / "candidate_policies.json"
-VIEW_DB = Path(os.environ.get("ELECTION_VIEW_DB", BASE_DIR / "data" / "analytics" / "views.sqlite3"))
 CITY_ORDER = ["台北市", "新北市", "桃園市", "台中市", "台南市", "高雄市"]
 
 TOPIC_RULES = {
@@ -49,37 +48,41 @@ st.set_page_config(
 )
 
 
-def record_and_read_views(path: Path) -> tuple[int | None, int | None]:
-    """Count one view per Streamlit browser session without storing personal data."""
+def _supabase_config() -> tuple[str, str]:
+    """Read credentials from Streamlit Secrets, with env vars for local hosting."""
+    url = os.environ.get("SUPABASE_URL", "").strip()
+    key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        now = datetime.now(ZoneInfo("Asia/Taipei"))
-        today = now.date().isoformat()
-        with sqlite3.connect(path, timeout=5) as connection:
-            connection.execute("PRAGMA journal_mode=WAL")
-            connection.execute(
-                "CREATE TABLE IF NOT EXISTS page_views ("
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, viewed_at TEXT NOT NULL, viewed_date TEXT NOT NULL)"
-            )
-            if not st.session_state.get("page_view_recorded", False):
-                connection.execute(
-                    "INSERT INTO page_views (viewed_at, viewed_date) VALUES (?, ?)",
-                    (now.isoformat(timespec="seconds"), today),
-                )
-                connection.commit()
-                st.session_state["page_view_recorded"] = True
-            total = int(connection.execute("SELECT COUNT(*) FROM page_views").fetchone()[0])
-            daily = int(
-                connection.execute(
-                    "SELECT COUNT(*) FROM page_views WHERE viewed_date = ?", (today,)
-                ).fetchone()[0]
-            )
-        return total, daily
-    except (OSError, sqlite3.Error):
+        settings = st.secrets.get("supabase", {})
+        url = str(settings.get("url", url)).strip()
+        key = str(settings.get("anon_key", key)).strip()
+    except Exception:
+        # Missing secrets are expected in local development and during setup.
+        pass
+    return url, key
+
+
+def record_and_read_views() -> tuple[int | None, int | None]:
+    """Count this Streamlit session once using persistent Supabase storage."""
+    cached = st.session_state.get("page_view_counts")
+    if isinstance(cached, tuple) and len(cached) == 2:
+        return cached
+
+    url, key = _supabase_config()
+    if not url or not key:
         return None, None
 
+    try:
+        counts = record_supabase_view(url, key)
+    except (OSError, KeyError, TypeError, ValueError):
+        # Analytics must never prevent the public dashboard from loading.
+        return None, None
 
-total_views, today_views = record_and_read_views(VIEW_DB)
+    st.session_state["page_view_counts"] = counts
+    return counts
+
+
+total_views, today_views = record_and_read_views()
 
 with st.container(key="theme_menu"):
     with st.popover("⋮", help="網站顯示設定", key="display_settings"):
